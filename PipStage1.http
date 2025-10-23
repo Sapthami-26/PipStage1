@@ -1,0 +1,6 @@
+@PipStage1_HostAddress = http://localhost:5130
+
+GET {{PipStage1_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
