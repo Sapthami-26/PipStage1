@@ -4,7 +4,7 @@ using PipStage1.Models;
 
 namespace PipStage1.Controllers
 {
-    [Route("api/[controller]")] // Base route: /api/PipStage1
+    [Route("api/[controller]")] 
     [ApiController]
     public class PipStage1Controller : ControllerBase
     {
@@ -22,9 +22,9 @@ namespace PipStage1.Controllers
             var detail = await _repo.GetDetailsByMasterIdAsync(id);
             if (detail == null)
             {
-                return NotFound(); // HTTP 404
+                return NotFound(); 
             }
-            return Ok(detail); // HTTP 200
+            return Ok(detail); 
         }
 
         // PUT: /api/PipStage1/{id}
@@ -32,15 +32,16 @@ namespace PipStage1.Controllers
         public async Task<IActionResult> UpdateStage1Details(int id, [FromBody] PipStage1UpdateDto details)
         {
             await _repo.UpdateStage1DetailsAsync(id, details);
-            return NoContent(); // HTTP 204
+            return NoContent(); 
         }
 
         // POST: /api/PipStage1/{id}/submit/{mEmpId}
         [HttpPost("{id:int}/submit/{mEmpId:int}")]
         public async Task<IActionResult> EmployeeSubmit(int id, int mEmpId)
         {
+            // Calls UpdateEmployeeSubmitAsync, which uses @PIPStage1ID (id) and @SubmittedByMEmpID (mEmpId)
             await _repo.UpdateEmployeeSubmitAsync(id, mEmpId);
-            return NoContent(); // HTTP 204
+            return NoContent(); 
         }
 
         // POST: /api/PipStage1/actionplan (Insert/Update)
@@ -48,7 +49,7 @@ namespace PipStage1.Controllers
         public async Task<IActionResult> InsertUpdateActionPlan([FromBody] ActionPlanItem actionPlan)
         {
             await _repo.InsertUpdateActionPlanAsync(actionPlan);
-            return CreatedAtAction(nameof(GetDetailsByMasterId), new { id = actionPlan.PIPStage1ID }, actionPlan); // HTTP 201
+            return CreatedAtAction(nameof(GetDetailsByMasterId), new { id = actionPlan.PIPStage1ID }, actionPlan); 
         }
 
         // DELETE: /api/PipStage1/actionplan/{pipaid}/{pipStage1Id}
@@ -56,7 +57,7 @@ namespace PipStage1.Controllers
         public async Task<IActionResult> DeleteActionPlan(int pipaid, int pipStage1Id)
         {
             await _repo.DeleteActionPlanAsync(pipaid, pipStage1Id);
-            return NoContent(); // HTTP 204
+            return NoContent(); 
         }
     }
 }

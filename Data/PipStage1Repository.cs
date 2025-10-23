@@ -50,9 +50,14 @@ namespace PipStage1.Data
             parameters.Add("@PerformanceHistory", details.PerformanceHistory);
             parameters.Add("@ImprovementAreas", details.ImprovementAreas);
             parameters.Add("@Comments", details.Comments);
+            
+            parameters.Add("@HRBPRemarks", details.HRBPRemarks);
+            parameters.Add("@PIPDuration", details.PIPDuration);
+            
             parameters.Add("@PIPStartDate", details.PIPStartDate, dbType: DbType.DateTime2);
             parameters.Add("@PIPEndDate", details.PIPEndDate, dbType: DbType.DateTime2);
             parameters.Add("@PIPMidReviewDate", details.PIPMidReviewDate, dbType: DbType.DateTime2);
+            
             parameters.Add("@IsSaveAsDraft", details.IsSaveAsDraft);
 
             await connection.ExecuteAsync(spName, parameters, commandType: CommandType.StoredProcedure);
@@ -63,6 +68,7 @@ namespace PipStage1.Data
             const string spName = "PIP_Stage1_UpdateEmpSubmit";
 
             using var connection = new SqlConnection(_connectionString);
+            // Parameters match the SQL procedure: @PIPStage1ID and @SubmittedByMEmpID
             await connection.ExecuteAsync(
                 spName,
                 new { @PIPStage1ID = pipStage1Id, @SubmittedByMEmpID = submittedByMEmpId },
