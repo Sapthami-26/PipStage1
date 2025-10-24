@@ -8,6 +8,6 @@ namespace PipStage1.Models
         public int Weightage { get; set; }
         public DateTime? TargetDate { get; set; }
         public DateTime? ReviewDate { get; set; }
-        public bool IsSaveAsDraft { get; set; }
+        public bool IsSaveAsDraft { get; set; } 
     }
 }
