@@ -2,9 +2,7 @@ namespace PipStage1.Models
 {
    public class PipStage1Detail : PipStage1HeaderDto
     {
-        // This is the property that was missing and will be set manually
         public int PIPStage1ID { get; set; } 
-        
         public List<ActionPlanItem> ActionPlan { get; set; } = new List<ActionPlanItem>();
     }
     public class PipStage1UpdateDto
