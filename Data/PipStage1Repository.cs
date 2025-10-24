@@ -26,18 +26,45 @@ namespace PipStage1.Data
             var parameters = new DynamicParameters();
             parameters.Add("@PIPStage1ID", pipStage1Id);
 
-            // This is the correct method for reading two result sets
             using var multi = await connection.QueryMultipleAsync(spName, parameters, commandType: CommandType.StoredProcedure);
 
-            // This must now succeed due to the model being maximally safe
-            var detail = await multi.ReadSingleOrDefaultAsync<PipStage1Detail>();
+            // 1. Read the incomplete data into the DTO (SUCCESSFUL MAPPING)
+            // We use PipStage1HeaderDto because it matches the incomplete SQL SELECT list.
+            var headerDto = await multi.ReadSingleOrDefaultAsync<PipStage1HeaderDto>();
 
-            if (detail != null)
+            if (headerDto == null)
             {
-                detail.ActionPlan = multi.Read<ActionPlanItem>().ToList();
+                return null; // Triggers the 404 in the controller
             }
 
-            return detail;
+            // 2. Manually construct the final detail object, setting the missing ID and copying properties
+            var detail = new PipStage1Detail
+            {
+                PIPStage1ID = pipStage1Id, // 🔑 FIX: Inject the missing ID from the parameter
+
+                // Transfer properties from the DTO to the final object (using inheritance is cleaner)
+                MEmpID = headerDto.MEmpID,
+                EmpName = headerDto.EmpName,
+                GenID = headerDto.GenID,
+                LevelName = headerDto.LevelName,
+                TeamGroup = headerDto.TeamGroup,
+                RMName = headerDto.RMName,
+                HRBPName = headerDto.HRBPName,
+                InitiatedOn = headerDto.InitiatedOn,
+                PIPStartDate = headerDto.PIPStartDate,
+                PIPEndDate = headerDto.PIPEndDate,
+                PIPMidReviewDate = headerDto.PIPMidReviewDate,
+                PerformanceHistory = headerDto.PerformanceHistory,
+                ImprovementAreas = headerDto.ImprovementAreas,
+                Comments = headerDto.Comments,
+                IsAgreedByEmp = headerDto.IsAgreedByEmp,
+                EmpAgreedOn = headerDto.EmpAgreedOn
+            };
+
+            // 3. Read the second result set (Action Plan)
+            detail.ActionPlan = multi.Read<ActionPlanItem>().ToList();
+
+            return detail; // This returns the full object (200 OK)
         }
 
         public async Task UpdateStage1DetailsAsync(int pipStage1Id, PipStage1UpdateDto details)

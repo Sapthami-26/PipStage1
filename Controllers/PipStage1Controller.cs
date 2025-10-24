@@ -22,7 +22,6 @@ namespace PipStage1.Controllers
 
             if (detail == null)
             {
-                // The 404 response is generated HERE because the repository returned null
                 return NotFound();
             }
 
