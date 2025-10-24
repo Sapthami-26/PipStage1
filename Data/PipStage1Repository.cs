@@ -26,8 +26,10 @@ namespace PipStage1.Data
             var parameters = new DynamicParameters();
             parameters.Add("@PIPStage1ID", pipStage1Id);
 
+            // This is the correct method for reading two result sets
             using var multi = await connection.QueryMultipleAsync(spName, parameters, commandType: CommandType.StoredProcedure);
 
+            // This must now succeed due to the model being maximally safe
             var detail = await multi.ReadSingleOrDefaultAsync<PipStage1Detail>();
 
             if (detail != null)
@@ -50,14 +52,14 @@ namespace PipStage1.Data
             parameters.Add("@PerformanceHistory", details.PerformanceHistory);
             parameters.Add("@ImprovementAreas", details.ImprovementAreas);
             parameters.Add("@Comments", details.Comments);
-            
+
             parameters.Add("@HRBPRemarks", details.HRBPRemarks);
             parameters.Add("@PIPDuration", details.PIPDuration);
-            
+
             parameters.Add("@PIPStartDate", details.PIPStartDate, dbType: DbType.DateTime2);
             parameters.Add("@PIPEndDate", details.PIPEndDate, dbType: DbType.DateTime2);
             parameters.Add("@PIPMidReviewDate", details.PIPMidReviewDate, dbType: DbType.DateTime2);
-            
+
             parameters.Add("@IsSaveAsDraft", details.IsSaveAsDraft);
 
             await connection.ExecuteAsync(spName, parameters, commandType: CommandType.StoredProcedure);

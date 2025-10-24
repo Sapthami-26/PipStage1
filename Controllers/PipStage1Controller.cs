@@ -4,7 +4,7 @@ using PipStage1.Models;
 
 namespace PipStage1.Controllers
 {
-    [Route("api/[controller]")] 
+    [Route("api/[controller]")]
     [ApiController]
     public class PipStage1Controller : ControllerBase
     {
@@ -15,16 +15,18 @@ namespace PipStage1.Controllers
             _repo = repo;
         }
 
-        // GET: /api/PipStage1/{id}
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetDetailsByMasterId(int id)
         {
             var detail = await _repo.GetDetailsByMasterIdAsync(id);
+
             if (detail == null)
             {
-                return NotFound(); 
+                // The 404 response is generated HERE because the repository returned null
+                return NotFound();
             }
-            return Ok(detail); 
+
+            return Ok(detail);
         }
 
         // PUT: /api/PipStage1/{id}
@@ -32,7 +34,7 @@ namespace PipStage1.Controllers
         public async Task<IActionResult> UpdateStage1Details(int id, [FromBody] PipStage1UpdateDto details)
         {
             await _repo.UpdateStage1DetailsAsync(id, details);
-            return NoContent(); 
+            return NoContent();
         }
 
         // POST: /api/PipStage1/{id}/submit/{mEmpId}
@@ -41,7 +43,7 @@ namespace PipStage1.Controllers
         {
             // Calls UpdateEmployeeSubmitAsync, which uses @PIPStage1ID (id) and @SubmittedByMEmpID (mEmpId)
             await _repo.UpdateEmployeeSubmitAsync(id, mEmpId);
-            return NoContent(); 
+            return NoContent();
         }
 
         // POST: /api/PipStage1/actionplan (Insert/Update)
@@ -49,7 +51,7 @@ namespace PipStage1.Controllers
         public async Task<IActionResult> InsertUpdateActionPlan([FromBody] ActionPlanItem actionPlan)
         {
             await _repo.InsertUpdateActionPlanAsync(actionPlan);
-            return CreatedAtAction(nameof(GetDetailsByMasterId), new { id = actionPlan.PIPStage1ID }, actionPlan); 
+            return CreatedAtAction(nameof(GetDetailsByMasterId), new { id = actionPlan.PIPStage1ID }, actionPlan);
         }
 
         // DELETE: /api/PipStage1/actionplan/{pipaid}/{pipStage1Id}
@@ -57,7 +59,7 @@ namespace PipStage1.Controllers
         public async Task<IActionResult> DeleteActionPlan(int pipaid, int pipStage1Id)
         {
             await _repo.DeleteActionPlanAsync(pipaid, pipStage1Id);
-            return NoContent(); 
+            return NoContent();
         }
     }
 }
