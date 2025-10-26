@@ -3,6 +3,7 @@ using System.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using PipStage1.Models;
 using System.Data;
+using System.Collections.Generic;
 
 namespace PipStage1.Data
 {
@@ -16,56 +17,88 @@ namespace PipStage1.Data
                 ?? throw new InvalidOperationException("WFAppConnection connection string not found.");
         }
 
-       public async Task<PipStage1Detail?> GetDetailsByMasterIdAsync(int pipStage1Id)
-    {
-        const string spName = "PIP_Stage1_GetDetailsByMasterID";
-
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
-
-        var parameters = new DynamicParameters();
-        parameters.Add("@PIPStage1ID", pipStage1Id);
-
-        using var multi = await connection.QueryMultipleAsync(spName, parameters, commandType: CommandType.StoredProcedure);
-
-        // 1. Read the incomplete data into the DTO. This succeeds because the DTO matches the SQL output.
-        var headerDto = await multi.ReadSingleOrDefaultAsync<PipStage1HeaderDto>();
-
-        if (headerDto == null)
+       public async Task<PipStage1Detail> GetPipStage1DetailsByMasterIDAsync(int pipStage1Id)
         {
-            return null; // Triggers the 404
+            DataSet dsStage1 = new DataSet();
+            string connectionString = _connectionString;
+            const string spName = "[dbo].[PIP_Stage1_GetDetailsByMasterID]"; 
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand cmd = new SqlCommand(spName, connection))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@PIPStage1ID", pipStage1Id); 
+
+                try
+                {
+                    await connection.OpenAsync(); 
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        da.Fill(dsStage1);
+                    }
+                }
+                catch (SqlException ex)
+                {
+                    throw new Exception($"Database error executing {spName}.", ex); 
+                }
+            }
+
+            // --- Map DataSet Result Sets to Model ---
+            if (dsStage1.Tables.Count == 0 || dsStage1.Tables[0].Rows.Count == 0)
+            {
+                return null; 
+            }
+
+            // Map Table[0] (Main Details)
+            DataRow row = dsStage1.Tables[0].Rows[0];
+            var detail = new PipStage1Detail // Updated Model Name
+            {
+                Id = pipStage1Id,
+                MEmpID = Convert.ToString(row["MEmpID"]),
+                EmpName = Convert.ToString(row["EmpName"]),
+                GenID = Convert.ToString(row["GenID"]),
+                Band = Convert.ToString(row["LevelName"]),
+                TeamGroup = Convert.ToString(row["TeamGroup"]),
+                RMName = Convert.ToString(row["RMName"]),
+                HRBPName = Convert.ToString(row["HRBPName"]),
+
+                InitiatedOn = Convert.ToDateTime(row["InitiatedOn"]),
+                
+                PIPStartDate = row["PIPStartDate"] is DBNull ? null : (DateTime?)Convert.ToDateTime(row["PIPStartDate"]),
+                PIPEndDate = row["PIPEndDate"] is DBNull ? null : (DateTime?)Convert.ToDateTime(row["PIPEndDate"]),
+                PIPMidReviewDate = row["PIPMidReviewDate"] is DBNull ? null : (DateTime?)Convert.ToDateTime(row["PIPMidReviewDate"]),
+                EmpAgreedOn = row["EmpAgreedOn"] is DBNull ? null : (DateTime?)Convert.ToDateTime(row["EmpAgreedOn"]),
+
+                IsAgreedByEmp = Convert.ToBoolean(row["IsAgreedByEmp"]),
+                PerformanceHistory = Convert.ToString(row["PerformanceHistory"]),
+                ImprovementAreas = Convert.ToString(row["ImprovementAreas"]),
+                Comments = Convert.ToString(row["Comments"])
+            };
+
+            // Ensure ActionPlan collection initialized if null
+            if (detail.ActionPlan == null)
+                detail.ActionPlan = new List<ActionPlanItem>();
+
+            // Map Table[1] (Action Plan)
+            if (dsStage1.Tables.Count > 1)
+            {
+                foreach (DataRow actionRow in dsStage1.Tables[1].Rows)
+                {
+                    detail.ActionPlan.Add(new ActionPlanItem
+                    {
+                        PIPAID = Convert.ToInt32(actionRow["PIPAID"]), 
+                        Task = Convert.ToString(actionRow["Task"]),
+                        Weightage = Convert.ToDecimal(actionRow["Weightage"]), 
+                        
+                        TargetDate = actionRow["TargetDate"] is DBNull ? null : (DateTime?)Convert.ToDateTime(actionRow["TargetDate"]),
+                        ReviewDate = actionRow["ReviewDate"] is DBNull ? null : (DateTime?)Convert.ToDateTime(actionRow["ReviewDate"])
+                    });
+                }
+            }
+
+            return detail;
         }
 
-        // 2. Manually construct the final detail object, copying all properties and injecting the missing ID.
-        var detail = new PipStage1Detail
-        {
-            // CRITICAL FIX: Inject the missing ID from the method parameter
-            PIPStage1ID = pipStage1Id, 
-            
-            // Map all properties from the DTO
-            MEmpID = headerDto.MEmpID,
-            EmpName = headerDto.EmpName,
-            GenID = headerDto.GenID,
-            LevelName = headerDto.LevelName,
-            TeamGroup = headerDto.TeamGroup,
-            RMName = headerDto.RMName,
-            HRBPName = headerDto.HRBPName,
-            InitiatedOn = headerDto.InitiatedOn,
-            PIPStartDate = headerDto.PIPStartDate,
-            PIPEndDate = headerDto.PIPEndDate,
-            PIPMidReviewDate = headerDto.PIPMidReviewDate,
-            PerformanceHistory = headerDto.PerformanceHistory,
-            ImprovementAreas = headerDto.ImprovementAreas,
-            Comments = headerDto.Comments,
-            IsAgreedByEmp = headerDto.IsAgreedByEmp,
-            EmpAgreedOn = headerDto.EmpAgreedOn
-        };
-
-        // 3. Read the second result set (Action Plan)
-        detail.ActionPlan = multi.Read<ActionPlanItem>().ToList();
-
-        return detail; // Returns data, resulting in 200 OK
-    }
         public async Task UpdateEmployeeSubmitAsync(int pipStage1Id, int submittedByMEmpId)
         {
             const string spName = "PIP_Stage1_UpdateEmpSubmit";

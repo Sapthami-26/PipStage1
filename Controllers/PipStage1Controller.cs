@@ -15,17 +15,35 @@ namespace PipStage1.Controllers
             _repo = repo;
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetDetailsByMasterId(int id)
+        // GET: api/PipStage1/123
+        [HttpGet("{masterId}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PipStage1Detail))] // Updated Model Name
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<PipStage1Detail>> GetPipStage1Details(int masterId) // Updated Model Name
         {
-            var detail = await _repo.GetDetailsByMasterIdAsync(id);
-
-            if (detail == null)
+            if (masterId <= 0)
             {
-                return NotFound();
+                return BadRequest("Master ID must be a positive integer.");
             }
 
-            return Ok(detail);
+            try
+            {
+                var details = await _repo.GetPipStage1DetailsByMasterIDAsync(masterId);
+
+                if (details == null)
+                {
+                    return NotFound($"PIP Stage 1 details not found for ID: {masterId}");
+                }
+
+                return Ok(details);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    "An internal server error occurred while retrieving data.");
+            }
         }
 
         // PUT: /api/PipStage1/{id}
@@ -50,7 +68,7 @@ namespace PipStage1.Controllers
         public async Task<IActionResult> InsertUpdateActionPlan([FromBody] ActionPlanItem actionPlan)
         {
             await _repo.InsertUpdateActionPlanAsync(actionPlan);
-            return CreatedAtAction(nameof(GetDetailsByMasterId), new { id = actionPlan.PIPStage1ID }, actionPlan);
+            return CreatedAtAction(nameof(GetPipStage1Details), new { masterId = actionPlan.PIPStage1ID }, actionPlan);
         }
 
         // DELETE: /api/PipStage1/actionplan/{pipaid}/{pipStage1Id}

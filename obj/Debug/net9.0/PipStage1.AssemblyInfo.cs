@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PipStage1")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+012201ae52dfa9bc3230c91cbc106ccd86625f94")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+95862214b355d076d79d586d9eb7d4988f78e498")]
 [assembly: System.Reflection.AssemblyProductAttribute("PipStage1")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PipStage1")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
