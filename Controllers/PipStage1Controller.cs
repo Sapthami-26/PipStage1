@@ -17,14 +17,11 @@ namespace PipStage1.Controllers
 
         // GET: api/PipStage1/123
         [HttpGet("{masterId}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PipStage1Detail))] // Updated Model Name
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<PipStage1Detail>> GetPipStage1Details(int masterId) // Updated Model Name
+        public async Task<ActionResult<PipStage1Detail>> GetPipStage1Details(int masterId)
         {
             if (masterId <= 0)
             {
+                // Returns 400 Bad Request
                 return BadRequest("Master ID must be a positive integer.");
             }
 
@@ -34,17 +31,21 @@ namespace PipStage1.Controllers
 
                 if (details == null)
                 {
+                    // Returns 404 Not Found
                     return NotFound($"PIP Stage 1 details not found for ID: {masterId}");
                 }
 
+                // Returns 200 OK
                 return Ok(details);
             }
             catch (Exception)
             {
+                // Returns 500 Internal Server Error
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     "An internal server error occurred while retrieving data.");
             }
         }
+    
 
         // PUT: /api/PipStage1/{id}
         [HttpPut("{id:int}")]

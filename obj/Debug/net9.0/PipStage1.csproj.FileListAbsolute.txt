@@ -40,3 +40,4 @@ D:\Samsung\PipStage1\obj\Debug\net9.0\refint\PipStage1.dll
 D:\Samsung\PipStage1\obj\Debug\net9.0\PipStage1.pdb
 D:\Samsung\PipStage1\obj\Debug\net9.0\PipStage1.genruntimeconfig.cache
 D:\Samsung\PipStage1\obj\Debug\net9.0\ref\PipStage1.dll
+D:\Samsung\PipStage1\obj\Debug\net9.0\PipStage1.sourcelink.json

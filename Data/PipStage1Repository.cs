@@ -17,12 +17,13 @@ namespace PipStage1.Data
                 ?? throw new InvalidOperationException("WFAppConnection connection string not found.");
         }
 
-       public async Task<PipStage1Detail> GetPipStage1DetailsByMasterIDAsync(int pipStage1Id)
+      public async Task<PipStage1Detail> GetPipStage1DetailsByMasterIDAsync(int pipStage1Id)
         {
             DataSet dsStage1 = new DataSet();
             string connectionString = _connectionString;
             const string spName = "[dbo].[PIP_Stage1_GetDetailsByMasterID]"; 
 
+            // Mimics the dbManager.WFAppConnection() and cmd.Connection.Open() logic
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand cmd = new SqlCommand(spName, connection))
             {
@@ -34,24 +35,25 @@ namespace PipStage1.Data
                     await connection.OpenAsync(); 
                     using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                     {
-                        da.Fill(dsStage1);
+                        da.Fill(dsStage1); // Fills dsStage1.Tables[0] and dsStage1.Tables[1]
                     }
                 }
                 catch (SqlException ex)
                 {
+                    // Throw an exception for the Controller to catch and return 500
                     throw new Exception($"Database error executing {spName}.", ex); 
                 }
             }
 
-            // --- Map DataSet Result Sets to Model ---
+            // --- Map DataSet Result Sets to Model (Identical to GetDetailsByMasterID mapping) ---
             if (dsStage1.Tables.Count == 0 || dsStage1.Tables[0].Rows.Count == 0)
             {
-                return null; 
+                return null; // Signals 404 Not Found in the Controller
             }
 
             // Map Table[0] (Main Details)
             DataRow row = dsStage1.Tables[0].Rows[0];
-            var detail = new PipStage1Detail // Updated Model Name
+            var detail = new PipStage1Detail
             {
                 Id = pipStage1Id,
                 MEmpID = Convert.ToString(row["MEmpID"]),
@@ -64,6 +66,7 @@ namespace PipStage1.Data
 
                 InitiatedOn = Convert.ToDateTime(row["InitiatedOn"]),
                 
+                // Handle nullable dates (DBNull check)
                 PIPStartDate = row["PIPStartDate"] is DBNull ? null : (DateTime?)Convert.ToDateTime(row["PIPStartDate"]),
                 PIPEndDate = row["PIPEndDate"] is DBNull ? null : (DateTime?)Convert.ToDateTime(row["PIPEndDate"]),
                 PIPMidReviewDate = row["PIPMidReviewDate"] is DBNull ? null : (DateTime?)Convert.ToDateTime(row["PIPMidReviewDate"]),
@@ -74,10 +77,6 @@ namespace PipStage1.Data
                 ImprovementAreas = Convert.ToString(row["ImprovementAreas"]),
                 Comments = Convert.ToString(row["Comments"])
             };
-
-            // Ensure ActionPlan collection initialized if null
-            if (detail.ActionPlan == null)
-                detail.ActionPlan = new List<ActionPlanItem>();
 
             // Map Table[1] (Action Plan)
             if (dsStage1.Tables.Count > 1)
