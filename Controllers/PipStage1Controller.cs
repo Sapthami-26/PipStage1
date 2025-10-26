@@ -21,12 +21,13 @@ namespace PipStage1.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetDetailsByMasterId(int id)
         {
+            // Call the repository to fetch the data
             var detail = await _repo.GetDetailsByMasterIdAsync(id);
-            if (detail == null)
+            if (detail != null)
             {
-                return NotFound(); 
+                return Ok(detail); 
             }
-            return Ok(detail); 
+            return NotFound($"PIP Stage 1 ID {id} was not found.");
         }
 
         // 2. PUT: /api/PipStage1/{id}
