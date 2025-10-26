@@ -76,24 +76,35 @@ namespace PipStage1.Data
                 commandType: CommandType.StoredProcedure);
         }
 
-        public async Task InsertUpdateActionPlanAsync(ActionPlanItem actionPlan)
-        {
-            const string spName = "PIP_Stage1_InsertUpdateActionPlan";
+       public async Task<int> InsertUpdateActionPlanAsync(ActionPlanItem actionPlan)
+{
+    const string spName = "PIP_Stage1_InsertUpdateActionPlan";
 
-            using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync();
+    using var connection = new SqlConnection(_connectionString);
+    await connection.OpenAsync();
 
-            var parameters = new DynamicParameters();
-            parameters.Add("@PIPAID", actionPlan.PIPAID);
-            parameters.Add("@PIPStage1ID", actionPlan.PIPStage1ID);
-            parameters.Add("@Task", actionPlan.Task);
-            parameters.Add("@Weightage", actionPlan.Weightage);
-            parameters.Add("@TargetDate", actionPlan.TargetDate, dbType: DbType.DateTime2);
-            parameters.Add("@ReviewDate", actionPlan.ReviewDate, dbType: DbType.DateTime2);
-            parameters.Add("@IsSaveAsDraft", actionPlan.IsSaveAsDraft);
+    var parameters = new DynamicParameters();
+    
+    // Pass ALL required parameters, including the one that was missing
+    parameters.Add("@PIPAID", actionPlan.PIPAID);
+    parameters.Add("@PIPStage1ID", actionPlan.PIPStage1ID);
+    parameters.Add("@Task", actionPlan.Task);
+    parameters.Add("@Weightage", actionPlan.Weightage);
+    parameters.Add("@TargetDate", actionPlan.TargetDate);
+    parameters.Add("@ReviewDate", actionPlan.ReviewDate);
+    parameters.Add("@IsSaveAsDraft", actionPlan.IsSaveAsDraft);
+    
+    // 🔑 THE FIX: Supply the missing parameter
+    parameters.Add("@Metrics", actionPlan.Metrics); 
 
-            await connection.ExecuteAsync(spName, parameters, commandType: CommandType.StoredProcedure);
-        }
+    // Assuming the SP executes an insert/update and returns the PIPAID or rows affected
+    // We use Execute for non-query operations
+    int rowsAffected = await connection.ExecuteAsync(spName, parameters, commandType: CommandType.StoredProcedure);
+    
+    // Since this is an Insert/Update, returning the PIPAID or rows affected is common
+    // If you need the new PIPAID, the stored procedure must return it (e.g., SELECT SCOPE_IDENTITY()).
+    return rowsAffected; 
+}
 
         public async Task DeleteActionPlanAsync(int pipaid, int pipStage1Id)
         {

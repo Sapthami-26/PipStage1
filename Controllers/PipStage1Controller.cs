@@ -59,21 +59,36 @@ namespace PipStage1.Controllers
 
         // 4. POST: /api/PipStage1/actionplan
         // Returns 200 OK with the full object and a success message.
-        [HttpPost("actionplan")]
+        [HttpPost("actionplan")] 
         public async Task<IActionResult> InsertUpdateActionPlan([FromBody] ActionPlanItem actionPlan)
         {
-            await _repo.InsertUpdateActionPlanAsync(actionPlan);
-            
-            return Ok(new 
+            // Simple validation check
+            if (actionPlan == null || actionPlan.PIPStage1ID == 0)
             {
-                Status = "Success",
-                Message = "Action Plan item saved/updated successfully (Work Done).",
-                Data = actionPlan
-            });
+                return BadRequest("Invalid Action Plan data.");
+            }
+            
+            try
+            {
+                // This is the line that was failing due to missing parameter
+                var rowsAffected = await _repo.InsertUpdateActionPlanAsync(actionPlan);
+
+                if (rowsAffected > 0)
+                {
+                    // Assuming success, return a 200 OK or 201 Created
+                    return Ok(new { Message = "Action Plan updated successfully.", Rows = rowsAffected });
+                }
+                return NotFound("Action Plan update failed. Check if PIPStage1ID exists.");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (recommended)
+                return StatusCode(500, $"An error occurred during update: {ex.Message}");
+            }
         }
 
         // 5. DELETE: /api/PipStage1/actionplan/{pipaid}/{pipStage1Id}
-        // Assuming you may also want a success message for delete (Default is 204 NoContent)
+        
         [HttpDelete("actionplan/{pipaid:int}/{pipStage1Id:int}")]
         public async Task<IActionResult> DeleteActionPlan(int pipaid, int pipStage1Id)
         {
