@@ -1,16 +1,13 @@
-using System;
-
 namespace PipStage1.Models
 {
     public class ActionPlanItem
     {
-        // Matches the second result set columns
         public int PIPAID { get; set; }
         public int PIPStage1ID { get; set; }
         public string Task { get; set; } = string.Empty;
-        public decimal Weightage { get; set; } 
+        public int Weightage { get; set; }
         public DateTime? TargetDate { get; set; }
         public DateTime? ReviewDate { get; set; }
-         public bool IsSaveAsDraft { get; set; }
+        public bool IsSaveAsDraft { get; set; } // CRITICAL: Must be returned by SQL result set 2
     }
 }

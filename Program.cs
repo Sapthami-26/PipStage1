@@ -1,4 +1,5 @@
 using PipStage1.Data;
+using Microsoft.Extensions.DependencyInjection; // Explicitly included for clarity
 
 var builder = WebApplication.CreateBuilder(args);
 
